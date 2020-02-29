@@ -53,10 +53,8 @@ class FacultyGroupListState extends State<FacultyGroupList> {
         'https://rts.a6raywa1cher.com/reschedule-tsu-spring/faculties/$title/groups?full_table=false');
 
     if (request.statusCode == 200) {
-      print((json.decode(request.body) as Map));
       final groupsList =
           (json.decode(request.body) as Map)['groups'] as List<dynamic>;
-      print(groupsList);
       setState(() {
         groups = groupsList
             .map((value) => FacultyGroup(
