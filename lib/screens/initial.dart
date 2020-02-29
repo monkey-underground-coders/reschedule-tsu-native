@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutterapp/constants.dart';
 import 'package:http/http.dart' as http;
 import '../domain/faculty.dart';
 
@@ -59,32 +60,20 @@ class _FacultyListState extends State<FacultyList> {
         child: ListView.builder(
           itemCount: faculties.length,
           itemBuilder: (context, i) {
-            return GestureDetector(
-              onTap: () {
-                Navigator.of(context)
-                    .pushNamed('/faculty', arguments: faculties[i].title);
-              },
-              child: Card(
-                elevation: 2.0,
-                margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(50, 65, 85, 0.85),
-                  ),
+            return Card(
+              elevation: 3.0,
+              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: backgroundColorTransient
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context)
+                        .pushNamed('/faculty', arguments: faculties[i].title);
+                  },
                   child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                    leading: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(width: 1, color: Colors.white24),
-                        ),
-                      ),
-                      padding: EdgeInsets.only(right: 12),
-                      child: Icon(
-                        Icons.album,
-                        color: Theme.of(context).textTheme.headline6.color,
-                      ),
-                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
                     title: Text(
                       faculties[i].title,
                       style: TextStyle(

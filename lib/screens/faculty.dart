@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutterapp/constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutterapp/domain/facultygroup.dart';
 
@@ -57,8 +58,13 @@ class FacultyGroupListState extends State<FacultyGroupList> {
           (json.decode(request.body) as Map)['groups'] as List<dynamic>;
       setState(() {
         groups = groupsList
-            .map((value) => FacultyGroup(
-                title: value['name'] + " (" + value['level'] + ")"))
+            .map(
+              (value) => FacultyGroup(
+                  title: value['name'],
+                  course: value['course'],
+                  level: value['level'],
+                  subgroups: value['subgroups']),
+            )
             .toList();
       });
     }
@@ -75,9 +81,7 @@ class FacultyGroupListState extends State<FacultyGroupList> {
               elevation: 2.0,
               margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               child: Container(
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(50, 65, 85, 0.85),
-                ),
+                decoration: BoxDecoration(color: backgroundColorTransient),
                 child: ListTile(
                   contentPadding: EdgeInsets.symmetric(horizontal: 10),
                   leading: Container(
