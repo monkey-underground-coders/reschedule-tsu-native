@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutterapp/constants.dart';
+import 'package:flutterapp/strings.dart';
 import 'package:http/http.dart' as http;
 import '../domain/faculty.dart';
 
@@ -12,11 +13,7 @@ class InitialPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: Scaffold(
-        backgroundColor: Theme.of(context).primaryColor,
-        appBar: AppBar(
-          title: Text('Расписание ТвГУ'),
-          leading: Icon(Icons.view_list),
-        ),
+        backgroundColor: Colors.white,
         body: FacultyList(),
       ),
     );
@@ -53,41 +50,147 @@ class _FacultyListState extends State<FacultyList> {
     }
   }
 
+  Future<void> _askedToLead() async {
+    switch (await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            title: const Text('Select assignment'),
+            children: <Widget>[
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, "Sex with Tanya");
+                },
+                child: const Text('Treasury department'),
+              ),
+              SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, "Go smoke");
+                },
+                child: const Text('State department'),
+              ),
+            ],
+          );
+        })) {
+      case "Sex with Tanya":
+        // Let's go.
+        // ...
+        break;
+      case "Go smoke":
+        // ...
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       child: Container(
-        child: ListView.builder(
-          itemCount: faculties.length,
-          itemBuilder: (context, i) {
-            return Card(
-              elevation: 3.0,
-              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: backgroundColorTransient
-                ),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context)
-                        .pushNamed('/faculty', arguments: faculties[i].title);
-                  },
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                    title: Text(
-                      faculties[i].title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(context).textTheme.headline6.color,
-                      ),
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        margin: EdgeInsets.only(top: 15),
+        child: ListView(
+          children: [
+            Center(
+              child: Column(children: [
+                Image.asset('assets/tvsu_logo.png'),
+                Container(
+                  margin: EdgeInsets.only(top: 20),
+                  child: Text(
+                    Strings.mainHeadline.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: headlineColor,
+                      // letterSpacing: 0.75,
                     ),
-                    trailing: Icon(Icons.keyboard_arrow_right,
-                        color: Theme.of(context).textTheme.headline6.color),
                   ),
                 ),
+              ]),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 35, left: 5),
+              child: Text(
+                Strings.mainFillData,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: secondaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            );
-          },
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 10),
+              padding: EdgeInsets.only(top: 0),
+              decoration: BoxDecoration(
+                color: secondaryBGColor,
+                border: Border.all(width: 1, color: secondaryBGColor2),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: ListTile(
+                dense: true,
+                title: Text(
+                  "Выберите факультет",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.caption.color,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: Theme.of(context).textTheme.caption.color,
+                ),
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 16),
+              padding: EdgeInsets.only(top: 0),
+              decoration: BoxDecoration(
+                color: secondaryBGColor,
+                border: Border.all(width: 1, color: secondaryBGColor2),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: ListTile(
+                dense: true,
+                title: Text(
+                  "Выберите степень",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.caption.color,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: Theme.of(context).textTheme.caption.color,
+                ),
+                enabled: false,
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 16),
+              padding: EdgeInsets.only(top: 0),
+              decoration: BoxDecoration(
+                color: secondaryBGColor,
+                border: Border.all(width: 1, color: secondaryBGColor2),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: ListTile(
+                dense: true,
+                title: Text(
+                  "Выберите группу",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.caption.color,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.keyboard_arrow_right,
+                  color: Theme.of(context).textTheme.caption.color,
+                ),
+                enabled: false,
+              ),
+            ),
+          ],
         ),
       ),
     );

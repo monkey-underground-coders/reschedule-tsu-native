@@ -10,8 +10,11 @@ class RTSApp extends StatelessWidget {
     return MaterialApp(
       title: "Расписание ТвГУ",
       theme: ThemeData(
+        fontFamily: 'Montserrat',
         primaryColor: backgroundColor,
-        textTheme: TextTheme(headline6: TextStyle(color: Colors.white)),
+        textTheme: TextTheme(
+          caption: TextStyle(color: backgroundColor),
+        ),
       ),
       initialRoute: "/",
       onGenerateRoute: RouteGenerator.generateRoute,

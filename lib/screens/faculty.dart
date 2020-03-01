@@ -103,8 +103,10 @@ class FacultyGroupListState extends State<FacultyGroupList> {
                       color: Theme.of(context).textTheme.headline6.color,
                     ),
                   ),
-                  trailing: Icon(Icons.keyboard_arrow_right,
-                      color: Theme.of(context).textTheme.headline6.color),
+                  trailing: Icon(
+                    Icons.keyboard_arrow_right,
+                    color: Theme.of(context).textTheme.headline6.color,
+                  ),
                 ),
               ),
             );

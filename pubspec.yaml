@@ -42,6 +42,21 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/tvsu_logo.png
+
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Thin
+          weight: 300
+        - asset: assets/fonts/Montserrat-Regular
+          weight: 400
+        - asset: assets/fonts/Montserrat-Medium
+          weight: 500
+        - asset: assets/fonts/Montserrat-Semibold
+          weight: 600
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
