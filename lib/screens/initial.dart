@@ -14,20 +14,54 @@ class InitialPage extends StatelessWidget {
     return Container(
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: FacultyList(),
+        body: InitialPageContent(),
       ),
     );
   }
 }
 
-class FacultyList extends StatefulWidget {
-  FacultyList({Key key}) : super(key: key);
+class InitialPageContent extends StatefulWidget {
+  InitialPageContent({Key key}) : super(key: key);
 
   @override
-  _FacultyListState createState() => _FacultyListState();
+  InitialPageContentState createState() => InitialPageContentState();
 }
 
-class _FacultyListState extends State<FacultyList> {
+Future<void> showSettingsDialog(
+  BuildContext context,
+  List<String> dialogOptions,
+  String dialogTitle,
+  Function dialogOptionPressHandler,
+) {
+  final renderedDialogOptions = dialogOptions
+      .map((e) => SimpleDialogOption(
+          key: Key(e),
+          child: Text(
+            e,
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
+          onPressed: () {
+            dialogOptionPressHandler(e);
+            Navigator.pop(context);
+          }))
+      .toList();
+
+  showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          title: Text(
+            dialogTitle,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          children: renderedDialogOptions,
+        );
+      });
+}
+
+class InitialPageContentState extends State<InitialPageContent> {
   List<Faculty> faculties = [];
 
   @override
@@ -50,50 +84,15 @@ class _FacultyListState extends State<FacultyList> {
     }
   }
 
-  Future<void> _askedToLead() async {
-    switch (await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            title: const Text('Выберите факультет'),
-            children: <Widget>[
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, "Sex with Tanya");
-                },
-                child: const Text('Факультет ПМиК'),
-              ),
-              SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, "Go smoke");
-                },
-                child: const Text('Факультет ИнЯЗ'),
-              ),
-               SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, "Go smoke");
-                },
-                child: const Text('Факультет Психологии'),
-              ),
-               SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, "Go smoke");
-                },
-                child: const Text('Факультет не твоих собачьих дел'),
-              ),
-            ],
-          );
-        })) {
-      case "Sex with Tanya":
-        // Let's go.
-        // ...
-        break;
-      case "Go smoke":
-        // ...
-        break;
-    }
+  void showFacultySelectionDialog() {
+    showSettingsDialog(
+      context,
+      faculties.map((e) => e.title).toList(),
+      Strings.chooseFaculty,
+      (String faculty) {
+        print(faculty);
+      },
+    );
   }
 
   @override
@@ -144,12 +143,10 @@ class _FacultyListState extends State<FacultyList> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: ListTile(
-                      onTap: () {
-                        _askedToLead();
-                      },
+                      onTap: showFacultySelectionDialog,
                       dense: true,
                       title: Text(
-                        "Выберите факультет",
+                        Strings.chooseFaculty,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).textTheme.caption.color,
@@ -170,9 +167,7 @@ class _FacultyListState extends State<FacultyList> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: ListTile(
-                      onTap: () {
-                        _askedToLead();
-                      },
+                      onTap: () {},
                       dense: true,
                       title: Text(
                         "Выберите степень",
@@ -197,9 +192,7 @@ class _FacultyListState extends State<FacultyList> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: ListTile(
-                      onTap: () {
-                        _askedToLead();
-                      },
+                      onTap: () {},
                       dense: true,
                       title: Text(
                         "Выберите группу",
