@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutterapp/constants.dart';
+import 'package:flutterapp/domain/facultygroup.dart';
 import 'package:flutterapp/strings.dart';
 import 'package:http/http.dart' as http;
 import '../domain/faculty.dart';
@@ -27,14 +28,15 @@ class InitialPageContent extends StatefulWidget {
   InitialPageContentState createState() => InitialPageContentState();
 }
 
-Future<void> showSettingsDialog(
+void showSettingsDialog(
   BuildContext context,
   List<String> dialogOptions,
   String dialogTitle,
   Function dialogOptionPressHandler,
 ) {
   final renderedDialogOptions = dialogOptions
-      .map((e) => SimpleDialogOption(
+      .map(
+        (e) => SimpleDialogOption(
           key: Key(e),
           child: Text(
             e,
@@ -43,56 +45,145 @@ Future<void> showSettingsDialog(
           onPressed: () {
             dialogOptionPressHandler(e);
             Navigator.pop(context);
-          }))
+          },
+        ),
+      )
       .toList();
 
   showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return SimpleDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          title: Text(
-            dialogTitle,
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          children: renderedDialogOptions,
-        );
-      });
+    context: context,
+    builder: (BuildContext context) {
+      return SimpleDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        title: Text(
+          dialogTitle,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        children: renderedDialogOptions,
+      );
+    },
+  );
 }
 
 class InitialPageContentState extends State<InitialPageContent> {
   List<Faculty> faculties = [];
+  List<FacultyGroup> groups = [];
+  List<String> appropriateGroups = [];
+  List<String> levels = [];
+
+  String selectedFaculty = '';
+  String selectedLevel = '';
+  FacultyGroup selectedGroup;
 
   @override
   void initState() {
     super.initState();
-    this._loadFaculties();
+    this.loadFaculties();
   }
 
-  void _loadFaculties() async {
-    final request = await http
-        .get('https://rts.a6raywa1cher.com/reschedule-tsu-spring/faculties');
+  loadFaculties() async {
+    final request = await http.get('https://rts.a6raywa1cher.com/reschedule-tsu-spring/faculties');
 
     if (request.statusCode == 200) {
-      final facultiesList =
-          (json.decode(request.body) as Map)['faculties'] as List<dynamic>;
+      final facultiesList = (json.decode(request.body) as Map)['faculties'] as List<dynamic>;
       setState(() {
-        faculties =
-            facultiesList.map((value) => Faculty(title: value)).toList();
+        faculties = facultiesList.map((value) => Faculty(title: value)).toList();
       });
+    } else {
+      print("TODO: Handle error here in the future...");
     }
   }
 
-  void showFacultySelectionDialog() {
+  loadFacultyGroups() async {
+    final request = await http.get(
+      'https://rts.a6raywa1cher.com/reschedule-tsu-spring/faculties/$selectedFaculty/groups?full_table=false',
+    );
+
+    if (request.statusCode == 200) {
+      final groupsList = (json.decode(request.body) as Map)['groups'] as List<dynamic>;
+
+      final constructedGroupsList = groupsList
+          .map(
+            (value) => FacultyGroup(
+              title: value['name'],
+              course: value['course'],
+              level: value['level'],
+              subgroups: value['subgroups'],
+            ),
+          )
+          .toList();
+
+      final List<String> constructedLevelList = constructedGroupsList.fold(
+        [],
+        (acc, group) {
+          if (!acc.contains(group.level)) {
+            acc.add(group.level);
+          }
+          return acc;
+        },
+      );
+
+      setState(() {
+        groups = constructedGroupsList;
+        levels = constructedLevelList;
+      });
+    } else {
+      print("TODO: Handle error here in the future...");
+    }
+  }
+
+  showFacultySelectionDialog() {
     showSettingsDialog(
       context,
       faculties.map((e) => e.title).toList(),
       Strings.chooseFaculty,
       (String faculty) {
-        print(faculty);
+        setState(() {
+          selectedFaculty = faculty;
+          selectedLevel = '';
+          selectedGroup = null;
+          this.loadFacultyGroups();
+        });
       },
     );
+  }
+
+  showLevelSelectionDialog() {
+    showSettingsDialog(
+      context,
+      levels,
+      Strings.chooseLevel,
+      (String level) {
+        setState(() {
+          selectedLevel = level;
+          selectedGroup = null;
+          appropriateGroups =
+              groups.where((group) => group.level == level).map((e) => e.title).toList();
+        });
+      },
+    );
+  }
+
+  showFacultyGroupSelectionDialog() {
+    showSettingsDialog(
+      context,
+      appropriateGroups,
+      Strings.chooseGroup,
+      (String group) {
+        setState(() {
+          selectedGroup = groups.firstWhere((_group) => _group.title == group);
+        });
+      },
+    );
+  }
+
+  getContinueButtonOnPressHandler() {
+    if (this.selectedFaculty.isNotEmpty && selectedGroup != null && selectedLevel.isNotEmpty) {
+      return () {
+        print("Motherfucker!?");
+      };
+    }
+    return null;
   }
 
   @override
@@ -146,7 +237,9 @@ class InitialPageContentState extends State<InitialPageContent> {
                       onTap: showFacultySelectionDialog,
                       dense: true,
                       title: Text(
-                        Strings.chooseFaculty,
+                        selectedFaculty.isEmpty
+                            ? Strings.chooseFaculty
+                            : "Факультет: $selectedFaculty",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).textTheme.caption.color,
@@ -167,10 +260,10 @@ class InitialPageContentState extends State<InitialPageContent> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: ListTile(
-                      onTap: () {},
+                      onTap: showLevelSelectionDialog,
                       dense: true,
                       title: Text(
-                        "Выберите степень",
+                        selectedLevel.isEmpty ? Strings.chooseLevel : "Степень: $selectedLevel",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).textTheme.caption.color,
@@ -180,7 +273,7 @@ class InitialPageContentState extends State<InitialPageContent> {
                         Icons.keyboard_arrow_right,
                         color: Theme.of(context).textTheme.caption.color,
                       ),
-                      enabled: false,
+                      enabled: selectedFaculty.isNotEmpty,
                     ),
                   ),
                   Container(
@@ -192,10 +285,12 @@ class InitialPageContentState extends State<InitialPageContent> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: ListTile(
-                      onTap: () {},
+                      onTap: showFacultyGroupSelectionDialog,
                       dense: true,
                       title: Text(
-                        "Выберите группу",
+                        selectedGroup == null
+                            ? Strings.chooseGroup
+                            : "Группа: ${selectedGroup.title}",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).textTheme.caption.color,
@@ -205,7 +300,7 @@ class InitialPageContentState extends State<InitialPageContent> {
                         Icons.keyboard_arrow_right,
                         color: Theme.of(context).textTheme.caption.color,
                       ),
-                      enabled: false,
+                      enabled: selectedLevel.isNotEmpty,
                     ),
                   ),
                   Container(
@@ -218,7 +313,7 @@ class InitialPageContentState extends State<InitialPageContent> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               RaisedButton(
-                                onPressed: () {},
+                                onPressed: getContinueButtonOnPressHandler(),
                                 textColor: Colors.white,
                                 color: backgroundColor,
                                 padding: const EdgeInsets.symmetric(
@@ -228,6 +323,7 @@ class InitialPageContentState extends State<InitialPageContent> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: new BorderRadius.circular(20.0),
                                 ),
+                                disabledColor: secondaryBGColor,
                                 child: Row(
                                   children: [
                                     Text(
