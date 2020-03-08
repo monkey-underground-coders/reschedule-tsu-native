@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import './screens/initial.dart';
-import './screens/faculty.dart';
+import 'package:flutterapp/screens/profile.dart';
+import 'package:flutterapp/screens/initial.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -9,14 +9,8 @@ class RouteGenerator {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => InitialPage());
-      case '/faculty':
-        if (args is String) {
-          return MaterialPageRoute(
-            builder: (_) => FacultyPage(facultyTitle: args),
-          );
-        }
-
-        return _errorRoute();
+      case '/profile':
+        return MaterialPageRoute(builder: (_) => ProfilePage());
       default:
         return _errorRoute();
     }

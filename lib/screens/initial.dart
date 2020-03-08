@@ -224,7 +224,7 @@ class InitialPageContentState extends State<InitialPageContent> {
   getContinueButtonOnPressHandler() {
     if (this.selectedFaculty.isNotEmpty && selectedGroup != null && selectedLevel.isNotEmpty) {
       return () {
-        print("Motherfucker!?");
+        Navigator.of(context).pushReplacementNamed('/profile');
       };
     }
     return null;
