@@ -38,9 +38,12 @@ void showSettingsDialog(
       .map(
         (e) => SimpleDialogOption(
           key: Key(e),
-          child: Text(
-            e,
-            style: TextStyle(fontWeight: FontWeight.w500),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              e,
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+            ),
           ),
           onPressed: () {
             dialogOptionPressHandler(e);
@@ -57,12 +60,53 @@ void showSettingsDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         title: Text(
           dialogTitle,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: backgroundColor),
         ),
         children: renderedDialogOptions,
       );
     },
   );
+}
+
+class SettingsButtonInput extends StatelessWidget {
+  SettingsButtonInput({
+    @required this.onTap,
+    @required this.enabledPredicate,
+    @required this.title,
+  });
+
+  final Function onTap;
+  final bool enabledPredicate;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      margin: EdgeInsets.only(top: 18),
+      padding: EdgeInsets.only(top: 0),
+      decoration: BoxDecoration(
+        color: secondaryBGColor,
+        border: Border.all(width: 1, color: secondaryBGColor2),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        dense: true,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).textTheme.caption.color,
+          ),
+        ),
+        trailing: Icon(
+          Icons.keyboard_arrow_right,
+          color: Theme.of(context).textTheme.caption.color,
+        ),
+        enabled: enabledPredicate,
+      ),
+    );
+  }
 }
 
 class InitialPageContentState extends State<InitialPageContent> {
@@ -199,7 +243,11 @@ class InitialPageContentState extends State<InitialPageContent> {
                 children: [
                   Center(
                     child: Column(children: [
-                      Image.asset('assets/tvsu_logo.png'),
+                      Image.asset(
+                        'assets/tvsu_logo.png',
+                        height: 200,
+                        width: 209,
+                      ),
                       Container(
                         margin: EdgeInsets.only(top: 20),
                         child: Text(
@@ -225,83 +273,24 @@ class InitialPageContentState extends State<InitialPageContent> {
                       ),
                     ),
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 10),
-                    padding: EdgeInsets.only(top: 0),
-                    decoration: BoxDecoration(
-                      color: secondaryBGColor,
-                      border: Border.all(width: 1, color: secondaryBGColor2),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ListTile(
-                      onTap: showFacultySelectionDialog,
-                      dense: true,
-                      title: Text(
-                        selectedFaculty.isEmpty
-                            ? Strings.chooseFaculty
-                            : "Факультет: $selectedFaculty",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.caption.color,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.keyboard_arrow_right,
-                        color: Theme.of(context).textTheme.caption.color,
-                      ),
-                    ),
+                  SettingsButtonInput(
+                    onTap: showFacultySelectionDialog,
+                    enabledPredicate: true,
+                    title: selectedFaculty.isEmpty
+                        ? Strings.chooseFaculty
+                        : "Факультет: $selectedFaculty",
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 18),
-                    padding: EdgeInsets.only(top: 0),
-                    decoration: BoxDecoration(
-                      color: secondaryBGColor,
-                      border: Border.all(width: 1, color: secondaryBGColor2),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ListTile(
-                      onTap: showLevelSelectionDialog,
-                      dense: true,
-                      title: Text(
-                        selectedLevel.isEmpty ? Strings.chooseLevel : "Степень: $selectedLevel",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.caption.color,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.keyboard_arrow_right,
-                        color: Theme.of(context).textTheme.caption.color,
-                      ),
-                      enabled: selectedFaculty.isNotEmpty,
-                    ),
+                  SettingsButtonInput(
+                    onTap: showLevelSelectionDialog,
+                    enabledPredicate: selectedFaculty.isNotEmpty,
+                    title: selectedLevel.isEmpty ? Strings.chooseLevel : "Степень: $selectedLevel",
                   ),
-                  Container(
-                    margin: EdgeInsets.only(top: 18),
-                    padding: EdgeInsets.only(top: 0),
-                    decoration: BoxDecoration(
-                      color: secondaryBGColor,
-                      border: Border.all(width: 1, color: secondaryBGColor2),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ListTile(
-                      onTap: showFacultyGroupSelectionDialog,
-                      dense: true,
-                      title: Text(
-                        selectedGroup == null
-                            ? Strings.chooseGroup
-                            : "Группа: ${selectedGroup.title}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.caption.color,
-                        ),
-                      ),
-                      trailing: Icon(
-                        Icons.keyboard_arrow_right,
-                        color: Theme.of(context).textTheme.caption.color,
-                      ),
-                      enabled: selectedLevel.isNotEmpty,
-                    ),
+                  SettingsButtonInput(
+                    onTap: showFacultyGroupSelectionDialog,
+                    enabledPredicate: selectedLevel.isNotEmpty,
+                    title: selectedGroup == null
+                        ? Strings.chooseGroup
+                        : "Группа: ${selectedGroup.title}",
                   ),
                   Container(
                     margin: EdgeInsets.only(top: 25),
@@ -351,7 +340,11 @@ class InitialPageContentState extends State<InitialPageContent> {
           ),
           Container(
             margin: EdgeInsets.only(bottom: 15),
-            child: Image.asset('assets/muc_logo.png'),
+            child: Image.asset(
+              'assets/muc_logo.png',
+              height: 26,
+              width: 182,
+            ),
           )
         ],
       ),
