@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutterapp/constants.dart';
-import 'package:flutterapp/domain/facultygroup.dart';
+import 'package:flutterapp/models/facultygroup.dart';
 import 'package:flutterapp/strings.dart';
 import 'package:http/http.dart' as http;
-import '../domain/faculty.dart';
+import 'package:flutterapp/models/faculty.dart';
 
 class InitialPage extends StatelessWidget {
   const InitialPage({Key key}) : super(key: key);
