@@ -1,11 +1,10 @@
 import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:flutterapp/constants.dart';
-import 'package:flutterapp/models/facultygroup.dart';
-import 'package:flutterapp/strings.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutterapp/models/faculty.dart';
+import 'package:flutter/material.dart';
+import 'package:reschedule/constants.dart';
+import 'package:reschedule/models/facultygroup.dart';
+import 'package:reschedule/strings.dart';
+import 'package:reschedule/models/faculty.dart';
 
 class InitialPage extends StatelessWidget {
   const InitialPage({Key key}) : super(key: key);
@@ -86,7 +85,7 @@ class SettingsButtonInput extends StatelessWidget {
       padding: EdgeInsets.only(top: 0),
       decoration: BoxDecoration(
         color: secondaryBGColor,
-        border: Border.all(width: 1, color: secondaryBGColor2),
+        border: Border.all(width: 1, color: secondaryBGColor),
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: ListTile(
@@ -302,6 +301,7 @@ class InitialPageContentState extends State<InitialPageContent> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               RaisedButton(
+                                elevation: 0.2,
                                 onPressed: getContinueButtonOnPressHandler(),
                                 textColor: Colors.white,
                                 color: backgroundColor,
@@ -327,7 +327,7 @@ class InitialPageContentState extends State<InitialPageContent> {
                                     )
                                   ],
                                 ),
-                              ),
+                              )
                             ],
                           )
                         ],

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/screens/profile.dart';
-import 'package:flutterapp/screens/initial.dart';
+import 'package:reschedule/screens/profile.dart';
+import 'package:reschedule/screens/initial.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    final args = settings.arguments;
+    final arguments = settings.arguments;
 
     switch (settings.name) {
       case '/':

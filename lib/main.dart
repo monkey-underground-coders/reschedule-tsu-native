@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/constants.dart';
-import 'package:flutterapp/route_generator.dart';
+import 'package:reschedule/constants.dart';
+import 'package:reschedule/route_generator.dart';
 
 void main() => runApp(RTSApp());
 
