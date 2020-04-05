@@ -1,23 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:reschedule/constants.dart';
-import 'package:reschedule/route_generator.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
+import 'package:reschedule/app.dart';
 
-void main() => runApp(RTSApp());
+const mainHiveBox = 'studentPrefs';
 
-class RTSApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Расписание ТвГУ",
-      theme: ThemeData(
-        fontFamily: 'Montserrat',
-        primaryColor: backgroundColor,
-        textTheme: TextTheme(
-          caption: TextStyle(color: backgroundColor),
-        ),
-      ),
-      initialRoute: "/",
-      onGenerateRoute: RouteGenerator.generateRoute,
-    );
-  }
+void main() async {
+  await Hive.initFlutter();
+  await Hive.openBox(mainHiveBox);
+
+  runApp(App());
 }
