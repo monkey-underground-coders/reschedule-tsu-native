@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:reschedule/constants.dart';
-import 'package:reschedule/models/facultygroup.dart';
+import 'package:reschedule/repository/faculty_entity.dart';
+import 'package:reschedule/repository/faculty_group_entity.dart';
 import 'package:reschedule/strings.dart';
-import 'package:reschedule/models/faculty.dart';
 
 class InitialPage extends StatelessWidget {
   const InitialPage({Key key}) : super(key: key);
@@ -109,14 +109,14 @@ class SettingsButtonInput extends StatelessWidget {
 }
 
 class InitialPageContentState extends State<InitialPageContent> {
-  List<Faculty> faculties = [];
-  List<FacultyGroup> groups = [];
+  List<FacultyEntity> faculties = [];
+  List<FacultyGroupEntity> groups = [];
   List<String> appropriateGroups = [];
   List<String> levels = [];
 
   String selectedFaculty = '';
   String selectedLevel = '';
-  FacultyGroup selectedGroup;
+  FacultyGroupEntity selectedGroup;
 
   @override
   void initState() {
@@ -130,7 +130,7 @@ class InitialPageContentState extends State<InitialPageContent> {
     if (request.statusCode == 200) {
       final facultiesList = (json.decode(request.body) as Map)['faculties'] as List<dynamic>;
       setState(() {
-        faculties = facultiesList.map((value) => Faculty(title: value)).toList();
+        faculties = facultiesList.map((title) => FacultyEntity(title)).toList();
       });
     } else {
       print("TODO: Handle error here in the future...");
@@ -147,11 +147,11 @@ class InitialPageContentState extends State<InitialPageContent> {
 
       final constructedGroupsList = groupsList
           .map(
-            (value) => FacultyGroup(
-              title: value['name'],
-              course: value['course'],
-              level: value['level'],
-              subgroups: value['subgroups'],
+            (value) => FacultyGroupEntity(
+              value['name'],
+              value['course'],
+              value['level'],
+              value['subgroups'],
             ),
           )
           .toList();
