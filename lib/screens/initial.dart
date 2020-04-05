@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:reschedule/api/routes.dart';
 import 'package:reschedule/constants.dart';
+import 'package:reschedule/main.dart';
 import 'package:reschedule/repository/faculty_entity.dart';
 import 'package:reschedule/repository/faculty_group_entity.dart';
 import 'package:reschedule/strings.dart';
@@ -109,70 +112,80 @@ class SettingsButtonInput extends StatelessWidget {
 }
 
 class InitialPageContentState extends State<InitialPageContent> {
-  List<FacultyEntity> faculties = [];
+  final userPrefsBox = Hive.box(mainHiveBox);
+
+  String selectedLevel;
+  FacultyEntity selectedFaculty;
+  FacultyGroupEntity selectedGroup;
+
   List<FacultyGroupEntity> groups = [];
+  List<FacultyEntity> faculties = [];
   List<String> appropriateGroups = [];
   List<String> levels = [];
-
-  String selectedFaculty = '';
-  String selectedLevel = '';
-  FacultyGroupEntity selectedGroup;
 
   @override
   void initState() {
     super.initState();
+
+    setState(() {
+      selectedFaculty = userPrefsBox.get('selectedFaculty', defaultValue: '');
+      selectedLevel = userPrefsBox.get('selectedLevel', defaultValue: '');
+      selectedGroup = userPrefsBox.get('selectedGroup', defaultValue: '');
+    });
+
     this.loadFaculties();
   }
 
   loadFaculties() async {
-    final request = await http.get('https://rts.a6raywa1cher.com/reschedule-tsu-spring/faculties');
-
-    if (request.statusCode == 200) {
-      final facultiesList = (json.decode(request.body) as Map)['faculties'] as List<dynamic>;
-      setState(() {
-        faculties = facultiesList.map((title) => FacultyEntity(title)).toList();
-      });
-    } else {
-      print("TODO: Handle error here in the future...");
-    }
+    http.get(APIRoutes.getFaculties).then((response) {
+      if (response.statusCode == 200) {
+        final facultiesList = (json.decode(response.body) as Map)['faculties'] as List<dynamic>;
+        setState(() {
+          faculties = facultiesList.map((title) => FacultyEntity(title)).toList();
+        });
+      } else {
+        print("TODO: Handle error here in the future...");
+      }
+    }).catchError((err) {
+      // TODO: Catch error here.
+      print(err);
+    });
   }
 
   loadFacultyGroups() async {
-    final request = await http.get(
-      'https://rts.a6raywa1cher.com/reschedule-tsu-spring/faculties/$selectedFaculty/groups?full_table=false',
-    );
+    http.get(APIRoutes.getFacultyGroups(selectedFaculty.title)).then((response) {
+      if (response.statusCode == 200) {
+        final groupsList = (json.decode(response.body) as Map)['groups'] as List<dynamic>;
+        print(groupsList);
+        final constructedGroupsList = groupsList
+            .map(
+              (value) => FacultyGroupEntity(
+                value['name'],
+                value['course'],
+                value['level'],
+                value['subgroups'],
+              ),
+            )
+            .toList();
+        final List<String> constructedLevelList = constructedGroupsList.fold(
+          [],
+          (acc, group) {
+            if (!acc.contains(group.level)) {
+              acc.add(group.level);
+            }
+            return acc;
+          },
+        );
 
-    if (request.statusCode == 200) {
-      final groupsList = (json.decode(request.body) as Map)['groups'] as List<dynamic>;
-
-      final constructedGroupsList = groupsList
-          .map(
-            (value) => FacultyGroupEntity(
-              value['name'],
-              value['course'],
-              value['level'],
-              value['subgroups'],
-            ),
-          )
-          .toList();
-
-      final List<String> constructedLevelList = constructedGroupsList.fold(
-        [],
-        (acc, group) {
-          if (!acc.contains(group.level)) {
-            acc.add(group.level);
-          }
-          return acc;
-        },
-      );
-
-      setState(() {
-        groups = constructedGroupsList;
-        levels = constructedLevelList;
-      });
-    } else {
-      print("TODO: Handle error here in the future...");
-    }
+        setState(() {
+          groups = constructedGroupsList;
+          levels = constructedLevelList;
+        });
+      }
+    }).catchError((err) {
+      // TODO: Catch error here
+      print(err);
+    });
   }
 
   showFacultySelectionDialog() {
@@ -180,12 +193,17 @@ class InitialPageContentState extends State<InitialPageContent> {
       context,
       faculties.map((e) => e.title).toList(),
       Strings.chooseFaculty,
-      (String faculty) {
+      (FacultyEntity faculty) {
         setState(() {
           selectedFaculty = faculty;
           selectedLevel = '';
           selectedGroup = null;
           this.loadFacultyGroups();
+        });
+        userPrefsBox.putAll({
+          'selectedFaculty': faculty,
+          'selectedLevel': '',
+          'selectedGroup': null,
         });
       },
     );
@@ -200,8 +218,18 @@ class InitialPageContentState extends State<InitialPageContent> {
         setState(() {
           selectedLevel = level;
           selectedGroup = null;
-          appropriateGroups =
-              groups.where((group) => group.level == level).map((e) => e.title).toList();
+          appropriateGroups = groups
+              .where(
+                (group) => group.level == level,
+              )
+              .map(
+                (e) => e.title,
+              )
+              .toList();
+        });
+        userPrefsBox.putAll({
+          'selectedLevel': level,
+          'selectedGroup': null,
         });
       },
     );
@@ -213,15 +241,17 @@ class InitialPageContentState extends State<InitialPageContent> {
       appropriateGroups,
       Strings.chooseGroup,
       (String group) {
+        final nextGroup = groups.firstWhere((_group) => _group.title == group);
         setState(() {
-          selectedGroup = groups.firstWhere((_group) => _group.title == group);
+          selectedGroup = nextGroup;
         });
+        userPrefsBox.put('selectedGroup', nextGroup);
       },
     );
   }
 
   getContinueButtonOnPressHandler() {
-    if (this.selectedFaculty.isNotEmpty && selectedGroup != null && selectedLevel.isNotEmpty) {
+    if (this.selectedFaculty != null && selectedGroup != null && selectedLevel.isNotEmpty) {
       return () {
         Navigator.of(context).pushReplacementNamed('/profile');
       };
@@ -275,18 +305,18 @@ class InitialPageContentState extends State<InitialPageContent> {
                   SettingsButtonInput(
                     onTap: showFacultySelectionDialog,
                     enabledPredicate: true,
-                    title: selectedFaculty.isEmpty
+                    title: selectedFaculty == null
                         ? Strings.chooseFaculty
                         : "Факультет: $selectedFaculty",
                   ),
                   SettingsButtonInput(
                     onTap: showLevelSelectionDialog,
-                    enabledPredicate: selectedFaculty.isNotEmpty,
+                    enabledPredicate: selectedFaculty != null,
                     title: selectedLevel.isEmpty ? Strings.chooseLevel : "Степень: $selectedLevel",
                   ),
                   SettingsButtonInput(
                     onTap: showFacultyGroupSelectionDialog,
-                    enabledPredicate: selectedLevel.isNotEmpty,
+                    enabledPredicate: selectedLevel != null,
                     title: selectedGroup == null
                         ? Strings.chooseGroup
                         : "Группа: ${selectedGroup.title}",
