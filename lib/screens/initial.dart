@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:reschedule/api/routes.dart';
+import 'package:reschedule/api/client.dart';
 import 'package:reschedule/constants.dart';
-import 'package:reschedule/main.dart';
+import 'package:reschedule/hive.dart';
 import 'package:reschedule/repository/faculty_entity.dart';
 import 'package:reschedule/repository/faculty_group_entity.dart';
 import 'package:reschedule/strings.dart';
@@ -30,25 +30,22 @@ class InitialPageContent extends StatefulWidget {
   InitialPageContentState createState() => InitialPageContentState();
 }
 
-void showSettingsDialog(
+void showSettingsDialog<T>(
   BuildContext context,
   List<String> dialogOptions,
   String dialogTitle,
   Function dialogOptionPressHandler,
 ) {
-  final renderedDialogOptions = dialogOptions
+  var renderedDialogOptions = dialogOptions
       .map(
-        (e) => SimpleDialogOption(
-          key: Key(e),
+        (o) => SimpleDialogOption(
+          key: Key(o),
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 4),
-            child: Text(
-              e,
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
-            ),
+            child: Text(o, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
           ),
           onPressed: () {
-            dialogOptionPressHandler(e);
+            dialogOptionPressHandler(o);
             Navigator.pop(context);
           },
         ),
@@ -71,15 +68,15 @@ void showSettingsDialog(
 }
 
 class SettingsButtonInput extends StatelessWidget {
+  final Function onTap;
+  final String label;
+  final bool enabledPredicate;
+
   SettingsButtonInput({
     @required this.onTap,
     @required this.enabledPredicate,
-    @required this.title,
+    @required this.label,
   });
-
-  final Function onTap;
-  final bool enabledPredicate;
-  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +92,7 @@ class SettingsButtonInput extends StatelessWidget {
         onTap: onTap,
         dense: true,
         title: Text(
-          title,
+          label,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: Theme.of(context).textTheme.caption.color,
@@ -112,7 +109,7 @@ class SettingsButtonInput extends StatelessWidget {
 }
 
 class InitialPageContentState extends State<InitialPageContent> {
-  final userPrefsBox = Hive.box(mainHiveBox);
+  final userPrefsBox = Hive.box(HiveBoxes.userPrefs);
 
   String selectedLevel;
   FacultyEntity selectedFaculty;
@@ -126,22 +123,23 @@ class InitialPageContentState extends State<InitialPageContent> {
   @override
   void initState() {
     super.initState();
+    this.loadFaculties();
 
     setState(() {
-      selectedFaculty = userPrefsBox.get('selectedFaculty', defaultValue: '');
+      selectedGroup = userPrefsBox.get('selectedGroup', defaultValue: null);
       selectedLevel = userPrefsBox.get('selectedLevel', defaultValue: '');
-      selectedGroup = userPrefsBox.get('selectedGroup', defaultValue: '');
+      selectedFaculty = userPrefsBox.get('selectedFaculty', defaultValue: null);
+      // appropriateGroups = userPrefsBox.get('appropriateGroups', defaultValue: []);
     });
-
-    this.loadFaculties();
   }
 
   loadFaculties() async {
-    http.get(APIRoutes.getFaculties).then((response) {
+    fetchFaculties(http.Client()).then((response) {
       if (response.statusCode == 200) {
-        final facultiesList = (json.decode(response.body) as Map)['faculties'] as List<dynamic>;
+        final parsed = jsonDecode(response.body)['faculties'];
+        final facultiesParsed = parsed.map<FacultyEntity>((json) => FacultyEntity(json)).toList();
         setState(() {
-          faculties = facultiesList.map((title) => FacultyEntity(title)).toList();
+          faculties = facultiesParsed;
         });
       } else {
         print("TODO: Handle error here in the future...");
@@ -153,33 +151,22 @@ class InitialPageContentState extends State<InitialPageContent> {
   }
 
   loadFacultyGroups() async {
-    http.get(APIRoutes.getFacultyGroups(selectedFaculty.title)).then((response) {
+    fetchFacultyGroups(http.Client(), selectedFaculty.title).then((response) {
       if (response.statusCode == 200) {
-        final groupsList = (json.decode(response.body) as Map)['groups'] as List<dynamic>;
-        print(groupsList);
-        final constructedGroupsList = groupsList
-            .map(
-              (value) => FacultyGroupEntity(
-                value['name'],
-                value['course'],
-                value['level'],
-                value['subgroups'],
-              ),
-            )
-            .toList();
-        final List<String> constructedLevelList = constructedGroupsList.fold(
-          [],
-          (acc, group) {
-            if (!acc.contains(group.level)) {
-              acc.add(group.level);
-            }
-            return acc;
-          },
-        );
+        final parsed = jsonDecode(response.body)['groups'];
+        List<FacultyGroupEntity> groupsParsed =
+            parsed.map<FacultyGroupEntity>((json) => FacultyGroupEntity.fromJson(json)).toList();
+
+        final List<String> levelsParsed = groupsParsed.fold<List<String>>([], (levels, group) {
+          if (!levels.contains(group.level)) {
+            levels.add(group.level);
+          }
+          return levels;
+        }).toList();
 
         setState(() {
-          groups = constructedGroupsList;
-          levels = constructedLevelList;
+          groups = groupsParsed;
+          levels = levelsParsed;
         });
       }
     }).catchError((err) {
@@ -191,15 +178,16 @@ class InitialPageContentState extends State<InitialPageContent> {
   showFacultySelectionDialog() {
     showSettingsDialog(
       context,
-      faculties.map((e) => e.title).toList(),
+      faculties.map((f) => f.title).toList(),
       Strings.chooseFaculty,
-      (FacultyEntity faculty) {
+      (String facultyTitle) {
+        var faculty = faculties.firstWhere((f) => f.title == facultyTitle);
         setState(() {
           selectedFaculty = faculty;
           selectedLevel = '';
           selectedGroup = null;
-          this.loadFacultyGroups();
         });
+        this.loadFacultyGroups();
         userPrefsBox.putAll({
           'selectedFaculty': faculty,
           'selectedLevel': '',
@@ -215,20 +203,15 @@ class InitialPageContentState extends State<InitialPageContent> {
       levels,
       Strings.chooseLevel,
       (String level) {
+        var groupsList = groups.where((group) => group.level == level).map((e) => e.title).toList();
         setState(() {
           selectedLevel = level;
           selectedGroup = null;
-          appropriateGroups = groups
-              .where(
-                (group) => group.level == level,
-              )
-              .map(
-                (e) => e.title,
-              )
-              .toList();
+          appropriateGroups = groupsList;
         });
         userPrefsBox.putAll({
           'selectedLevel': level,
+          'appropriateGroups': groupsList,
           'selectedGroup': null,
         });
       },
@@ -240,12 +223,12 @@ class InitialPageContentState extends State<InitialPageContent> {
       context,
       appropriateGroups,
       Strings.chooseGroup,
-      (String group) {
-        final nextGroup = groups.firstWhere((_group) => _group.title == group);
+      (String groupTitle) {
+        var group = groups.firstWhere((_group) => _group.title == groupTitle);
         setState(() {
-          selectedGroup = nextGroup;
+          selectedGroup = group;
         });
-        userPrefsBox.put('selectedGroup', nextGroup);
+        userPrefsBox.put('selectedGroup', group);
       },
     );
   }
@@ -305,19 +288,19 @@ class InitialPageContentState extends State<InitialPageContent> {
                   SettingsButtonInput(
                     onTap: showFacultySelectionDialog,
                     enabledPredicate: true,
-                    title: selectedFaculty == null
+                    label: selectedFaculty == null
                         ? Strings.chooseFaculty
-                        : "Факультет: $selectedFaculty",
+                        : "Факультет: ${selectedFaculty.title}",
                   ),
                   SettingsButtonInput(
                     onTap: showLevelSelectionDialog,
                     enabledPredicate: selectedFaculty != null,
-                    title: selectedLevel.isEmpty ? Strings.chooseLevel : "Степень: $selectedLevel",
+                    label: selectedLevel.isEmpty ? Strings.chooseLevel : "Степень: $selectedLevel",
                   ),
                   SettingsButtonInput(
                     onTap: showFacultyGroupSelectionDialog,
                     enabledPredicate: selectedLevel != null,
-                    title: selectedGroup == null
+                    label: selectedGroup == null
                         ? Strings.chooseGroup
                         : "Группа: ${selectedGroup.title}",
                   ),
