@@ -1,4 +1,10 @@
+import 'package:hive/hive.dart';
+
+part 'faculty_entity.g.dart';
+
+@HiveType(typeId: 0)
 class FacultyEntity {
+  @HiveField(0)
   final String title;
 
   FacultyEntity(this.title);
@@ -18,7 +24,7 @@ class FacultyEntity {
     return {'title': title};
   }
 
-  static FacultyEntity fromJSON(Map<String, Object> json) {
-    return FacultyEntity(json['title'] as String);
+  factory FacultyEntity.fromJson(json) {
+    return FacultyEntity(json);
   }
 }

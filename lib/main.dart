@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hive/hive.dart';
 import 'package:reschedule/app.dart';
-
-const mainHiveBox = 'studentPrefs';
+import 'package:reschedule/hive.dart';
 
 void main() async {
-  await Hive.initFlutter();
-  await Hive.openBox(mainHiveBox);
+  HiveHelper _hive = new HiveHelper();
+  await _hive.open();
 
   runApp(App());
 }

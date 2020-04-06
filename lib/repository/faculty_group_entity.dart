@@ -1,14 +1,19 @@
+import 'package:hive/hive.dart';
+
+part 'faculty_group_entity.g.dart';
+
+@HiveType(typeId: 1)
 class FacultyGroupEntity {
-  // University course of the group
+  @HiveField(0)
   final int course;
 
-  // Count of subgroups
+  @HiveField(1)
   final int subgroups;
 
-  // Title of the group
+  @HiveField(2)
   final String title;
 
-  // Level (Bachelor/Magistracy)
+  @HiveField(3)
   final String level;
 
   FacultyGroupEntity(
@@ -44,9 +49,9 @@ class FacultyGroupEntity {
     };
   }
 
-  static FacultyGroupEntity fromJSON(Map<String, Object> json) {
+  factory FacultyGroupEntity.fromJson(Map<String, dynamic> json) {
     return FacultyGroupEntity(
-      json['title'] as String,
+      json['name'] as String,
       json['level'] as String,
       json['course'] as int,
       json['subgroups'] as int,
